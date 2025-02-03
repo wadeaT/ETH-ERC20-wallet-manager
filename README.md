@@ -1,113 +1,51 @@
-# ETH Mainnet Wallet Manager
+# ETH Wallet Hub
 
-A comprehensive Ethereum wallet management application built as the final project for the **Advanced Web Technologies** course. This application enables users to manage their ETH and ERC20 tokens on the Ethereum Mainnet with a focus on **security**, **usability**, and **real-time data**.
-
----
+ETH Wallet Hub is a modern, secure Ethereum wallet management application built with Next.js. It provides a user-friendly interface for managing Ethereum and ERC-20 tokens with real-time price tracking and portfolio management.
 
 ## Features
 
-### Wallet Management
-- Create new ETH wallets with secure recovery phrases
-- Restore existing wallets using recovery phrases
-- Connect existing wallets
-- View wallet balances and total portfolio value
+- **Secure Wallet Management**: Create, restore, and manage Ethereum wallets with industry-standard security
+- **Real-time Token Tracking**: Live price updates and portfolio tracking for major ERC-20 tokens
+- **Transaction Management**: Send, receive, and track transaction history
+- **Portfolio Analytics**: Visual representation of your portfolio performance
+- **Multi-token Support**: Support for ETH and ERC-20 tokens
+- **Responsive Design**: Fully responsive interface that works on desktop and mobile devices
 
-### Token Support
-- ETH (Ethereum) native token support
-- ERC20 tokens support (e.g., USDT, SHIB, etc.)
-- Real-time token prices
-- Token balance visualization
+## Technology Stack
 
-### Transaction Features
-- Send ETH and ERC20 tokens
-- View detailed transaction history
-- Real-time transaction status tracking
-- Gas price estimation and management
+- Next.js 15
+- React 18
+- Ethers.js 6
+- Firebase (Authentication & Firestore)
+- TailwindCSS
+- Framer Motion
+- Recharts
 
----
-## Technical Stack
+## Getting Started
 
-### Frontend
-- **Framework**: Next.js 15.1.4
-- **UI Library**: React 18.2.0
-- **Styling**: TailwindCSS 3.4.17
-- **State Management**: React Query (TanStack Query)
-- **Animations**: Framer Motion
-- **Charts**: Recharts
-- **Ethereum Interaction**: ethers.js 6.13.5, Web3.js 4.3.0
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/yourusername/eth-wallet-hub.git
+    ```
 
+2. Install dependencies:
+    ```bash
+    npm install
+    ```
 
-### Backend Services
-- **Firebase**:
-  - Authentication
-  - Cloud Firestore
-  - Hosting
+3. Set up environment variables:
+    Create a `.env.local` file with the following variables:
+    ```bash
+    NEXT_PUBLIC_ETHERSCAN_API_KEY=your_etherscan_api_key
+    NEXT_PUBLIC_MAINNET_RPC_URL=your_ethereum_node_url
+    NEXT_PUBLIC_MORALIS_API_KEY=your_moralis_key
+    ```
 
-### APIs & Integration
-- Ethereum Mainnet
-- CoinGecko API (Price data)
-- Binance API (Fallback price data)
-- WalletConnect
+4. Run the development server:
+    ```bash
+    npm run dev
+    ```
 
----
+## License
 
-## Prerequisites
-- **Node.js** (v18 or higher)
-- **npm** or **yarn**
-- Firebase account
-- Ethereum node provider (Infura, Alchemy, or own node)
-
----
-## Environment Setup
-
-Create a `.env.local` file in the root directory with the following variables:
-
-```
-NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_firebase_project_id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
-NEXT_PUBLIC_FIREBASE_APP_ID=your_firebase_app_id
-NEXT_PUBLIC_MAINNET_RPC_URL=your_ethereum_node_url
-NEXT_PUBLIC_ETHERSCAN_API_KEY=your_etherscan_api_key
-```
-
----
-
-## Installation
-
-### Clone the repository:
-```bash
-git clone https://github.com/yourusername/eth-wallet-hub.git
-cd eth-wallet-hub
-```
-
-### Install dependencies:
-```bash
-npm install
-# or
-yarn install
-```
-
-### Run the development server:
-```bash
-npm run dev
-# or
-yarn dev
-```
-
----
-
-## Firebase Setup
-
-1. Create a new Firebase project.
-2. Enable **Authentication** and **Firestore**.
-3. Add a web app to your Firebase project.
-4. Copy the configuration to your `.env.local` file.
-
----
-
-## Contributing
-
-This project was developed as part of an academic course. While it's not actively maintained, contributions are welcome. Feel free to fork and submit pull requests.
+This project is licensed under the MIT License.
