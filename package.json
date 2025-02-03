@@ -28,8 +28,8 @@
     "swr": "^2.3.0",
     "tailwind-merge": "^3.0.1",
     "web3": "^4.3.0",
-    "@moralisweb3/core": "^2.25.1",
-    "@moralisweb3/evm-utils": "^2.25.1"
+    "@moralisweb3/core": "^2.7.4",
+    "@moralisweb3/evm-utils": "^2.7.4"
   },
   "devDependencies": {
     "@types/node": "^22.10.7",
