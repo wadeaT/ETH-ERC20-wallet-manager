@@ -1,0 +1,91 @@
+/* src/app/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* 🌞 Light Mode */
+  [data-theme="light"] {
+    --background: #ffffff;
+    --foreground: #1a1a1a;
+    --card: #ffffff;
+    --card-foreground: #1a1a1a;
+    --popover: #ffffff;
+    --popover-foreground: #1a1a1a;
+    --primary: #0066ff;
+    --primary-foreground: #ffffff;
+    --secondary: #f4f5f8;
+    --secondary-foreground: #1a1a1a;
+    --border: #e5e7eb;
+    --input: #e5e7eb;
+    --ring: #0066ff;
+    --muted: #f4f5f8;
+    --muted-foreground: #6b7280;
+    --success: #10b981;
+    --success-foreground: #ffffff;
+    --warning: #f59e0b;
+    --warning-foreground: #ffffff;
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+  }
+
+  /* 🌙 Dark Mode */
+  [data-theme="dark"] {
+    --background: #0a0a0c;
+    --foreground: #fafafa;
+    --card: #18181b;
+    --card-foreground: #fafafa;
+    --popover: #18181b;
+    --popover-foreground: #fafafa;
+    --primary: #3b82f6;
+    --primary-foreground: #ffffff;
+    --secondary: #27272a;
+    --secondary-foreground: #fafafa;
+    --border: #27272a;
+    --input: #27272a;
+    --ring: #3b82f6;
+    --muted: #27272a;
+    --muted-foreground: #a1a1aa;
+    --success: #22c55e;
+    --success-foreground: #ffffff;
+    --warning: #f59e0b;
+    --warning-foreground: #ffffff;
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+  }
+
+  /* 💜 Cyberpunk Mode */
+  [data-theme="cyberpunk"] {
+    --background: #13111C;
+    --foreground: #ffffff;
+    --card: #1a1727;
+    --card-foreground: #ffffff;
+    --popover: #1a1727;
+    --popover-foreground: #ffffff;
+    --primary: #f0408c;
+    --primary-foreground: #ffffff;
+    --secondary: #6e3aff;
+    --secondary-foreground: #ffffff;
+    --border: #2a2438;
+    --input: #2a2438;
+    --ring: #f0408c;
+    --muted: #2a2438;
+    --muted-foreground: #a89eff;
+    --success: #3fff7f;
+    --success-foreground: #000000;
+    --warning: #ff9e3a;
+    --warning-foreground: #000000;
+    --destructive: #ff3a88;
+    --destructive-foreground: #ffffff;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
