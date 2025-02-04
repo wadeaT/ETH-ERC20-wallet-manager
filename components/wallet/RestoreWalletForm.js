@@ -34,7 +34,9 @@ export function RestoreWalletForm({ onRestore, isLoading, error }) {
           value={recoveryPhrase}
           onChange={(e) => setRecoveryPhrase(e.target.value)}
           placeholder="Enter your 12-word recovery phrase..."
-          className="w-full h-32 bg-card/50 border border-border rounded-lg p-4 text-foreground placeholder-muted-foreground focus:outline-none focus:border-blue-500"
+          className="w-full h-32 bg-background border border-input rounded-lg p-4 
+            text-foreground placeholder-muted-foreground focus:outline-none 
+            focus:border-primary focus:ring-1 focus:ring-primary resize-none"
         />
 
         {error && (

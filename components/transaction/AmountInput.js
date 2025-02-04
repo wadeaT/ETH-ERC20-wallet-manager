@@ -21,8 +21,9 @@ export function AmountInput({
           placeholder="0.0"
           min="0"
           step="any"
-          className="w-full bg-muted/50 border border-input rounded-lg px-4 py-3 
-            text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary"
+          className="w-full bg-background border border-input rounded-lg px-4 py-3 
+            text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary 
+            focus:ring-1 focus:ring-primary"
         />
         <button
           type="button"

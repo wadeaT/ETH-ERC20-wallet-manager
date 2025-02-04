@@ -31,7 +31,9 @@ export function AccountForm({
               placeholder="Choose a username"
               value={formData.username}
               onChange={onInputChange}
-              className="w-full bg-input/50 border border-input rounded-md px-4 py-2"
+              className="w-full bg-background border border-input rounded-lg px-4 py-2 
+                text-foreground placeholder-muted-foreground focus:outline-none 
+                focus:border-primary focus:ring-1 focus:ring-primary"
             />
           </div>
 
@@ -46,12 +48,14 @@ export function AccountForm({
                 placeholder="Create a strong password"
                 value={formData.password}
                 onChange={onInputChange}
-                className="w-full bg-input/50 border border-input rounded-md px-4 py-2"
+                className="w-full bg-background border border-input rounded-lg px-4 py-2 
+                  text-foreground placeholder-muted-foreground focus:outline-none 
+                  focus:border-primary focus:ring-1 focus:ring-primary pr-10"
               />
               <button
                 type="button"
                 onClick={onTogglePassword}
-                className="absolute right-3 top-1/2 -translate-y-1/2"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
                 {showPassword ? "👁" : "👁‍🗨"}
               </button>
@@ -69,12 +73,14 @@ export function AccountForm({
                 placeholder="Confirm your password"
                 value={formData.confirmPassword}
                 onChange={onInputChange}
-                className="w-full bg-input/50 border border-input rounded-md px-4 py-2"
+                className="w-full bg-background border border-input rounded-lg px-4 py-2 
+                  text-foreground placeholder-muted-foreground focus:outline-none 
+                  focus:border-primary focus:ring-1 focus:ring-primary pr-10"
               />
               <button
                 type="button"
                 onClick={onToggleConfirmPassword}
-                className="absolute right-3 top-1/2 -translate-y-1/2"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
                 {showConfirmPassword ? "👁" : "👁‍🗨"}
               </button>
