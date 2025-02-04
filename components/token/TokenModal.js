@@ -1,7 +1,6 @@
 // src/components/token/TokenModal.js
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Card } from '../ui/Card';
 import { X } from 'lucide-react';
 import { TokenPriceChart } from './TokenPriceChart';

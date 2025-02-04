@@ -2,8 +2,8 @@
 'use client';
 
 import { Card } from '../ui/Card';
-import LiveTokenPrice from '../token/LiveTokenPrice';
-import TokenPriceChart from '../token/TokenPriceChart';
+import LiveTokenPrice from './LiveTokenPrice';
+import TokenPriceChart from './TokenPriceChart';
 import { formatCryptoAmount } from '@/lib/utils';
 
 export function TokenCard({ token, showBalance = false, onClick }) {

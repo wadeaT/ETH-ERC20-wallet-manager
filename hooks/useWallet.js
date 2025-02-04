@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { SUPPORTED_TOKENS } from '@/lib/constants/tokens';
-import rpcProvider from '@/lib/rpcProvider';
+
 import { getTokenBalance } from '@/services/transactionService';
 import { useTokenPrices } from './useTokenPrices';
 
