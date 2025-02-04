@@ -29,9 +29,9 @@ export function FormField({
         <input
           type={isPassword && showPassword ? 'text' : type}
           className={cn(
-            'w-full bg-input/50 border rounded-lg px-4 py-2',
+            'w-full bg-background border rounded-lg px-4 py-2',
             'text-foreground placeholder-muted-foreground',
-            'focus:outline-none focus:border-primary',
+            'focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary',
             error ? 'border-destructive' : 'border-input',
             isPassword ? 'pr-10' : ''
           )}
