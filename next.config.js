@@ -1,11 +1,13 @@
-// next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  async rewrites() {
+  async headers() {
     return [
       {
         source: '/api/:path*',
-        destination: '/api/:path*',
+        headers: [
+          { key: 'Content-Type', value: 'application/json' },
+          { key: 'Cache-Control', value: 'no-store' }
+        ],
       },
     ];
   },
