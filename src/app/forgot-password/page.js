@@ -10,12 +10,23 @@ import { Header } from '@/components/layout/Header';
 import { PasswordResetForm } from '@/components/auth/PasswordResetForm';
 import { SecurityNotice } from '@/components/common/SecurityNotice';
 
+/**
+ * The ForgotPassword component provides an interface for users to initiate a password reset.
+ * It handles sending a password reset email via Firebase authentication.
+ *
+ * @returns {JSX.Element} The password reset interface including a form and relevant notices.
+ */
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
+  /**
+   * Handles form submission for password reset requests. Sends a password reset email to the user.
+   * 
+   * @param {Event} e - The form submission event.
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');

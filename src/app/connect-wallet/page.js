@@ -5,6 +5,12 @@ import { Card } from '@/components/common/Card';
 import { Header } from '@/components/layout/Header';
 import { LoginForm } from '@/components/auth/LoginForm';
 
+/**
+ * Renders the Connect Wallet page component.
+ * This page includes a login form for wallet authentication and a security note.
+ * 
+ * @returns {JSX.Element} The Connect Wallet page layout with header, login form, and security advice.
+ */
 export default function ConnectWallet() {
   return (
     <div className="min-h-screen bg-background">

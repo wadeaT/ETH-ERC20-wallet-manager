@@ -1,6 +1,14 @@
 import { useState, useEffect } from 'react';
 import { priceWs } from '@/lib/services/priceWebSocket';
 
+
+/**
+ * useTokenPrices is a custom React hook that manages the fetching and real-time updating of cryptocurrency prices.
+ * It starts by fetching initial price data from a REST API and then subscribes to updates via WebSocket.
+ * This hook provides a reactive way to access and display current cryptocurrency prices within the application.
+ */
+
+
 export function useTokenPrices() {
   const [state, setState] = useState({
     prices: {},

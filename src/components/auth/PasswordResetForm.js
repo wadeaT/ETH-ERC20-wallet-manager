@@ -2,6 +2,12 @@
 import { Button } from '@/components/common/Button';
 import { SecurityNotice } from '@/components/common/SecurityNotice';
 
+
+/**
+ * PasswordResetForm component allows users to submit their email address to request a password reset link.
+ * This component manages the input of the email address and handles the form submission with validation.
+ */
+
 export function PasswordResetForm({ 
   email, 
   onEmailChange, 

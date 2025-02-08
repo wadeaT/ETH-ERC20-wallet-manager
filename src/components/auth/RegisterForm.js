@@ -4,6 +4,13 @@
 import { Button } from '@/components/common/Button';
 import { AccountRequirements } from '@/components/features/wallet/AccountRequirements';
 
+
+/**
+ * RegisterForm component provides a form interface for new users to register an account.
+ * It collects user information such as username, password, and confirmation of password.
+ * The form handles validation, displays loading states during processing, and provides error messages.
+ */
+
 export function RegisterForm({ 
   formData, 
   showPassword, 

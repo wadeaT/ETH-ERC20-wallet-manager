@@ -14,6 +14,13 @@ import { RecoveryPhrase } from '@/components/features/wallet/RecoveryPhrase';
 import { SuccessScreen } from '@/components/features/wallet/SuccessScreen';
 import { keyManager } from '@/lib/services/secureKeyManagement';
 
+/**
+ * The CreateWallet component handles the creation of a new user wallet,
+ * including user registration, wallet generation, and storing encrypted wallet information.
+ * The process involves several steps managed by internal component state.
+ *
+ * @returns {JSX.Element} The wallet creation interface with multiple conditional rendering based on the current step.
+ */
 export default function CreateWallet() {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -28,13 +35,17 @@ export default function CreateWallet() {
   const [recoveryPhrase, setRecoveryPhrase] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  /**
+   * Handles the process of creating a new account, generating a new wallet, encrypting,
+   * and storing wallet information securely using Firebase and local encryption techniques.
+   */
   const handleCreateAccount = async () => {
     setIsLoading(true);
     try {
       // Create new wallet
       const wallet = ethers.Wallet.createRandom();
       
-      // Create Firebase auth user
+      // Create Firebase auth user using a synthesized email
       const email = `${formData.username}@ethwallet.local`; // Create email from username
       const userCredential = await createUserWithEmailAndPassword(
         auth,
@@ -42,7 +53,7 @@ export default function CreateWallet() {
         formData.password
       );
 
-      // Encrypt private key with password
+      // Encrypt private key with password and store securely
       const encryptedKey = await keyManager.encryptKey(wallet.privateKey, formData.password);
 
       // Store wallet data in Firestore
@@ -56,13 +67,13 @@ export default function CreateWallet() {
         }
       });
 
-      // Save recovery phrase temporarily
+      // Save recovery phrase temporarily for user confirmation
       setRecoveryPhrase(wallet.mnemonic.phrase);
 
-      // Create session
+      // Initialize session
       const sessionId = keyManager.setSessionKey(wallet.address, wallet.privateKey);
       
-      // Store session data
+      // Store session data for current session
       sessionStorage.setItem('username', formData.username);
       sessionStorage.setItem('walletAddress', wallet.address);
       sessionStorage.setItem('encryptedKey', encryptedKey);

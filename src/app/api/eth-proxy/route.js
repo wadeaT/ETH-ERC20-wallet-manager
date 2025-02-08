@@ -1,6 +1,10 @@
 // src/app/api/eth-proxy/route.js
 import { NextResponse } from 'next/server';
 
+/**
+ * List of Ethereum RPC URLs to be used as fallback options.
+ * These endpoints are tried sequentially until one responds successfully.
+ */
 const RPC_URLS = [
   'https://eth.llamarpc.com',
   'https://cloudflare-eth.com',
@@ -8,6 +12,13 @@ const RPC_URLS = [
   'https://ethereum.publicnode.com'
 ];
 
+/**
+ * Handles incoming JSON-RPC POST requests by forwarding them to available Ethereum RPC endpoints.
+ * If an endpoint fails, the function retries the next one in the list until a successful response is received.
+ *
+ * @param {Request} request - The incoming HTTP request containing JSON-RPC data.
+ * @returns {Promise<Response>} - The proxied response from a successful RPC endpoint or an error response.
+ */
 export async function POST(request) {
   let lastError;
 
@@ -49,6 +60,7 @@ export async function POST(request) {
       }
     }
 
+    // If all RPC endpoints fail, throw the last encountered error
     throw lastError || new Error('All RPC endpoints failed');
   } catch (error) {
     console.error('Proxy error:', error);

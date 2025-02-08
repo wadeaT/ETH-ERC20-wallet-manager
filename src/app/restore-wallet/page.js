@@ -13,6 +13,13 @@ import { CredentialsForm } from '@/components/features/wallet/CredentialsForm';
 import { SecurityNotice } from '@/components/common/SecurityNotice';
 import { keyManager } from '@/lib/services/secureKeyManagement';
 
+/**
+ * The RestoreWallet component provides an interface for users to restore their existing wallet
+ * using a 12-word recovery phrase or set up a new account with existing wallet details.
+ * It handles both the recovery of wallets and the secure setup of user credentials.
+ *
+ * @returns {JSX.Element} The wallet restoration interface with conditional rendering based on the restoration step.
+ */
 export default function RestoreWallet() {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -26,6 +33,12 @@ export default function RestoreWallet() {
   const [error, setError] = useState('');
   const [isExistingUser, setIsExistingUser] = useState(false);
 
+  /**
+   * Handles the wallet restoration using the provided recovery phrase.
+   * Validates the phrase, restores the wallet, and checks if the wallet exists in the database.
+   *
+   * @param {string} phrase - The recovery phrase used to restore the wallet.
+   */
   const handleRestore = async (phrase) => {
     setIsLoading(true);
     setError('');
@@ -65,6 +78,12 @@ export default function RestoreWallet() {
     }
   };
 
+  /**
+   * Handles the submission of user credentials for a restored or new wallet.
+   * Updates existing user data or creates a new user in the database.
+   *
+   * @param {Event} e - The form submission event.
+   */
   const handleCredentialsSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);

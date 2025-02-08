@@ -1,6 +1,14 @@
 // src/hooks/useWallet.js
 'use client';
 
+
+/**
+ * useWallet is a custom React hook that manages the state and retrieval of a user's wallet data.
+ * It verifies the session, fetches wallet balances, and combines real-time token prices for a complete overview.
+ * The hook continuously updates wallet data at intervals to ensure up-to-date balances and token values.
+ */
+
+
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { SUPPORTED_TOKENS } from '@/lib/constants/tokens';

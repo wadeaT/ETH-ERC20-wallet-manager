@@ -11,6 +11,10 @@ import { db, auth } from '@/lib/firebase';
 import { keyManager } from '@/lib/services/secureKeyManagement';
 import { handleLogout } from '@/lib/utils/auth';
 
+/**
+ * LoginForm component provides an interface for user login.
+ * It handles user input for username and password, validates input, and manages the login process.
+ */
 export function LoginForm() {
   const router = useRouter();
   const [formData, setFormData] = useState({ username: '', password: '' });

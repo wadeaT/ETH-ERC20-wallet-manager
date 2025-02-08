@@ -1,6 +1,12 @@
 // src/components/ThemeProvider.js
 'use client';
 
+/**
+ * ThemeProvider component manages the theme state for the application,
+ * providing light or dark mode based on user preference or system settings.
+ * It uses a context to allow children components to access and modify the theme dynamically.
+ */
+
 import { createContext, useContext, useEffect, useState } from 'react';
 
 const ThemeContext = createContext({

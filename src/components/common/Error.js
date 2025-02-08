@@ -1,6 +1,12 @@
 // src/components/ui/Error.js
 'use client';
 
+/**
+ * ErrorMessage component displays a stylized error message within a card.
+ * It optionally includes a retry button to allow users to attempt to rectify the error.
+ * Features an alert icon, title, and detailed message to inform the user of the error encountered.
+ */
+
 import { AlertTriangle } from 'lucide-react';
 import { Card } from './Card';
 import { Button } from './Button';

@@ -4,6 +4,13 @@
 import { cn } from '@/lib/utils/styles';
 import { LoadingSpinner } from './Loading';
 
+
+/**
+ * Button component that can be used across the application for various user interactions.
+ * Supports multiple size and style variants, and can display loading indicators or icons.
+ * Utilizes utility classes for consistent styling and conditional rendering based on the loading state.
+ */
+
 const variants = {
   primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
   secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',

@@ -1,6 +1,14 @@
 // src/components/ErrorBoundary.js
 'use client';
 
+
+/**
+ * ErrorBoundary component that catches JavaScript errors anywhere in the child component tree,
+ * logs those errors, and displays a fallback UI instead of the component tree that crashed.
+ * This component is a critical part of handling unexpected errors in a React application.
+ */
+
+
 import { Component } from 'react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
