@@ -7,9 +7,11 @@ import { ethers } from 'ethers';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { db } from '@/lib/firebase';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, query, collection, where, getDocs } from 'firebase/firestore';
 import { RestoreWalletForm } from '@/components/features/wallet/RestoreWalletForm';
 import { CredentialsForm } from '@/components/features/wallet/CredentialsForm';
+import { SecurityNotice } from '@/components/common/SecurityNotice';
+import { keyManager } from '@/lib/services/secureKeyManagement';
 
 export default function RestoreWallet() {
   const router = useRouter();
@@ -22,6 +24,7 @@ export default function RestoreWallet() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isExistingUser, setIsExistingUser] = useState(false);
 
   const handleRestore = async (phrase) => {
     setIsLoading(true);
@@ -35,8 +38,27 @@ export default function RestoreWallet() {
       
       const restoredWallet = ethers.Wallet.fromPhrase(words.join(' ').toLowerCase());
       setWallet(restoredWallet);
+
+      // Check if this wallet already exists in our system
+      const q = query(
+        collection(db, 'users'),
+        where('wallet.address', '==', restoredWallet.address)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        const userData = querySnapshot.docs[0].data();
+        setCredentials(prev => ({
+          ...prev,
+          username: userData.username
+        }));
+        setIsExistingUser(true);
+      }
+
       setStep(2);
     } catch (err) {
+      console.error('Restore error:', err);
       setError(err.message || 'Failed to restore wallet');
     } finally {
       setIsLoading(false);
@@ -49,28 +71,56 @@ export default function RestoreWallet() {
     setError('');
 
     try {
-      const userRef = doc(db, 'users', credentials.username);
-      const existingUser = await getDoc(userRef);
-      
-      if (existingUser.exists()) {
-        throw new Error('Username already taken');
+      if (!wallet) {
+        throw new Error('Wallet not found');
       }
 
-      await setDoc(userRef, {
-        username: credentials.username,
-        password: credentials.password,
-        ethAddress: wallet.address,
-        encryptedKey: wallet.privateKey,
-        createdAt: new Date().toISOString()
-      });
+      const walletData = {
+        address: wallet.address,
+        privateKey: wallet.privateKey
+      };
 
-      localStorage.setItem('username', credentials.username);
-      localStorage.setItem('walletAddress', wallet.address);
-      localStorage.setItem('privateKey', wallet.privateKey);
+      if (isExistingUser) {
+        // Update existing wallet
+        const userDoc = doc(db, 'users', credentials.username);
+        await setDoc(userDoc, {
+          wallet: walletData,
+          lastLogin: new Date().toISOString()
+        }, { merge: true });
+      } else {
+        // Create new user
+        const userRef = doc(db, 'users', credentials.username);
+        const existingUser = await getDoc(userRef);
+        
+        if (existingUser.exists()) {
+          throw new Error('Username already taken');
+        }
+
+        await setDoc(userRef, {
+          username: credentials.username,
+          password: credentials.password,
+          createdAt: new Date().toISOString(),
+          lastLogin: new Date().toISOString(),
+          wallet: walletData
+        });
+      }
+
+      // Create encrypted key
+      const encryptedKey = await keyManager.encryptKey(wallet.privateKey, credentials.password);
+
+      // Store in session storage
+      sessionStorage.setItem('username', credentials.username);
+      sessionStorage.setItem('walletAddress', wallet.address);
+      sessionStorage.setItem('encryptedKey', encryptedKey);
+
+      // Create session
+      const sessionId = keyManager.setSessionKey(wallet.address, wallet.privateKey);
+      sessionStorage.setItem('sessionId', sessionId);
 
       router.push('/dashboard');
     } catch (err) {
-      setError(err.message || 'Failed to create account');
+      console.error('Credentials error:', err);
+      setError(err.message || 'Failed to save credentials');
       setIsLoading(false);
     }
   };
@@ -85,13 +135,20 @@ export default function RestoreWallet() {
         </h2>
 
         <Card className="bg-card/50 backdrop-blur-sm p-8">
-          {step === 1 ? (
-            <RestoreWalletForm 
-              onRestore={handleRestore}
-              isLoading={isLoading}
-              error={error}
-            />
-          ) : (
+          {step === 1 && (
+            <>
+              <SecurityNotice type="info" title="Existing Wallet Users" className="mb-6">
+                If you previously created a wallet, you can restore access using your 12-word recovery phrase.
+              </SecurityNotice>
+              <RestoreWalletForm 
+                onRestore={handleRestore}
+                isLoading={isLoading}
+                error={error}
+              />
+            </>
+          )}
+
+          {step === 2 && (
             <CredentialsForm
               credentials={credentials}
               onChange={setCredentials}
@@ -99,6 +156,7 @@ export default function RestoreWallet() {
               isLoading={isLoading}
               error={error}
               walletAddress={wallet.address}
+              isExistingUser={isExistingUser}
             />
           )}
         </Card>

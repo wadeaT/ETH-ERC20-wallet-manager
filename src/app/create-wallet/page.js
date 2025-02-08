@@ -1,16 +1,18 @@
 // src/app/create-wallet/page.js
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card } from '@/components/common/Card';
 import { useRouter } from 'next/navigation';
-import { db } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { Header } from '@/components/layout/Header';
 import { ethers } from 'ethers';
 import { RegisterForm } from '@/components/auth/RegisterForm';
 import { RecoveryPhrase } from '@/components/features/wallet/RecoveryPhrase';
 import { SuccessScreen } from '@/components/features/wallet/SuccessScreen';
+import { keyManager } from '@/lib/services/secureKeyManagement';
 
 export default function CreateWallet() {
   const router = useRouter();
@@ -29,26 +31,51 @@ export default function CreateWallet() {
   const handleCreateAccount = async () => {
     setIsLoading(true);
     try {
+      // Create new wallet
       const wallet = ethers.Wallet.createRandom();
-      setRecoveryPhrase(wallet.mnemonic.phrase);
+      
+      // Create Firebase auth user
+      const email = `${formData.username}@ethwallet.local`; // Create email from username
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        formData.password
+      );
 
+      // Encrypt private key with password
+      const encryptedKey = await keyManager.encryptKey(wallet.privateKey, formData.password);
+
+      // Store wallet data in Firestore
       await setDoc(doc(db, 'users', formData.username), {
         username: formData.username,
-        password: formData.password,
+        uid: userCredential.user.uid, // Store Firebase Auth UID
         createdAt: new Date().toISOString(),
-        wallet: { address: wallet.address }
+        wallet: {
+          address: wallet.address,
+          encryptedKey // Store encrypted private key
+        }
       });
 
-      // Save to localStorage
-      localStorage.setItem('walletAddress', wallet.address);
-      localStorage.setItem('privateKey', wallet.privateKey);
-      localStorage.setItem('username', formData.username);
+      // Save recovery phrase temporarily
+      setRecoveryPhrase(wallet.mnemonic.phrase);
+
+      // Create session
+      const sessionId = keyManager.setSessionKey(wallet.address, wallet.privateKey);
+      
+      // Store session data
+      sessionStorage.setItem('username', formData.username);
+      sessionStorage.setItem('walletAddress', wallet.address);
+      sessionStorage.setItem('encryptedKey', encryptedKey);
+      sessionStorage.setItem('sessionId', sessionId);
 
       setStep(2);
     } catch (err) {
-      setError(err.code === 'permission-denied' 
-        ? 'Username already taken' 
-        : 'Failed to create wallet');
+      console.error('Wallet creation error:', err);
+      setError(
+        err.code === 'auth/email-already-in-use' 
+          ? 'Username already taken' 
+          : err.message || 'Failed to create wallet'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -84,7 +111,7 @@ export default function CreateWallet() {
             phrase={recoveryPhrase}
             onConfirm={() => {
               setStep(3);
-              setRecoveryPhrase('');
+              setRecoveryPhrase(''); // Clear phrase from memory
             }}
           />
         )}

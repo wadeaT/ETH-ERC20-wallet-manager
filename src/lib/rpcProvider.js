@@ -1,44 +1,98 @@
 // src/lib/rpcProvider.js
 import { ethers } from 'ethers';
 
+const FALLBACK_PROVIDERS = [
+  'https://ethereum.publicnode.com',
+  'https://rpc.ankr.com/eth',
+  'https://eth.drpc.org',
+  'https://1rpc.io/eth'
+];
+
 class RpcProvider {
   constructor() {
-    this.providers = [
-      'https://eth.llamarpc.com',
-      'https://rpc.ankr.com/eth',
-      'https://ethereum.publicnode.com',
-    ].map(url => new ethers.JsonRpcProvider(url, undefined, {
-      batchMaxCount: 20, // Limit batch size
-      polling: true,
-      pollingInterval: 4000
-    }));
+    this._providers = FALLBACK_PROVIDERS.map(url => 
+      new ethers.JsonRpcProvider(url, {
+        chainId: 1,
+        name: 'mainnet'
+      }, {
+        batchMaxCount: 1, // Disable batching
+        polling: true,
+        pollingInterval: 4000,
+        staticNetwork: true,
+        timeout: 15000 // Increase timeout
+      })
+    );
     
-    this.currentProvider = 0;
-    this.requestQueue = [];
+    this._currentIndex = 0;
+    this._failedAttempts = new Map();
   }
 
-  async call(method, ...args) {
-    let error;
-    for (let i = 0; i < this.providers.length; i++) {
+  async _rotateProvider() {
+    const previousIndex = this._currentIndex;
+    const maxAttempts = 3;
+
+    do {
+      this._currentIndex = (this._currentIndex + 1) % this._providers.length;
+      const attempts = this._failedAttempts.get(this._currentIndex) || 0;
+      
+      if (attempts < maxAttempts) {
+        break;
+      }
+    } while (this._currentIndex !== previousIndex);
+
+    if (this._currentIndex === previousIndex) {
+      this._failedAttempts.clear();
+    }
+
+    console.log(`Switched to RPC provider: ${FALLBACK_PROVIDERS[this._currentIndex]}`);
+    return this._providers[this._currentIndex];
+  }
+
+  async _executeWithFallback(operation) {
+    let lastError;
+    
+    for (let attempt = 0; attempt < this._providers.length * 2; attempt++) {
       try {
-        const provider = this.providers[this.currentProvider];
-        return await provider[method](...args);
-      } catch (err) {
-        error = err;
-        this.currentProvider = (this.currentProvider + 1) % this.providers.length;
+        const result = await operation(this._providers[this._currentIndex]);
+        this._failedAttempts.delete(this._currentIndex);
+        return result;
+      } catch (error) {
+        console.error(`Provider error (${FALLBACK_PROVIDERS[this._currentIndex]}):`, error);
+        lastError = error;
+
+        const attempts = this._failedAttempts.get(this._currentIndex) || 0;
+        this._failedAttempts.set(this._currentIndex, attempts + 1);
+
+        // Add delay before retry
+        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+        await this._rotateProvider();
       }
     }
-    throw error;
+
+    throw lastError || new Error('All RPC providers failed');
   }
 
   get provider() {
-    return this.providers[this.currentProvider];
+    return this._providers[this._currentIndex];
   }
 
-  async processQueue() {
-    while (this.requestQueue.length > 0) {
-      const batch = this.requestQueue.splice(0, 20);
-      await Promise.all(batch.map(req => req()));
+  async getGasPrice() {
+    try {
+      const feeData = await this._executeWithFallback(provider => provider.getFeeData());
+      return feeData.gasPrice || ethers.parseUnits('50', 'gwei');
+    } catch (error) {
+      console.error('Failed to get gas price:', error);
+      return ethers.parseUnits('50', 'gwei');
+    }
+  }
+
+  async estimateGas(tx) {
+    try {
+      const gasLimit = await this._executeWithFallback(provider => provider.estimateGas(tx));
+      return (gasLimit * BigInt(130)) / BigInt(100);
+    } catch (error) {
+      console.error('Gas estimation failed:', error);
+      return BigInt(50000);
     }
   }
 }

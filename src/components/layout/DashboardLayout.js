@@ -1,13 +1,14 @@
 // src/components/layout/DashboardLayout.js
 'use client';
 
+import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { ThemeToggle } from '../common/ThemeToggle';
 import { Home, Send, Inbox, Repeat, History, LogOut } from 'lucide-react';
-import { auth } from '@/lib/firebase';
-import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
+import { handleLogout } from '@/lib/utils/auth';
+import { useWallet } from '@/hooks/useWallet';
 
 const NAV_ITEMS = [
   { name: 'Overview', path: '/dashboard', icon: Home },
@@ -38,14 +39,35 @@ function NavLink({ item, isActive, onClick }) {
 export function DashboardLayout({ children }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { checkSession } = useWallet();
 
-  const handleLogout = async () => {
+  useEffect(() => {
+    const verifySession = async () => {
+      try {
+        const isValid = await checkSession();
+        if (!isValid) {
+          console.log('Session invalid, redirecting to login');
+          await handleLogout();
+          router.push('/connect-wallet');
+        }
+      } catch (error) {
+        console.error('Session verification failed:', error);
+        await handleLogout();
+        router.push('/connect-wallet');
+      }
+    };
+
+    verifySession();
+  }, [router, checkSession]);
+
+  const onLogout = async () => {
     try {
-      await signOut(auth);
-      localStorage.clear();
+      await handleLogout();
       router.push('/');
     } catch (error) {
       console.error('Logout error:', error);
+      // Force redirect even if logout fails
+      router.push('/');
     }
   };
 
@@ -79,7 +101,7 @@ export function DashboardLayout({ children }) {
             <ThemeToggle />
           </div>
           <button
-            onClick={handleLogout}
+            onClick={onLogout}
             className="flex items-center gap-3 w-full px-4 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           >
             <LogOut size={20} />
@@ -123,7 +145,7 @@ export function DashboardLayout({ children }) {
               <div className="flex items-center gap-2">
                 <ThemeToggle />
                 <button
-                  onClick={handleLogout}
+                  onClick={onLogout}
                   className="p-2 text-muted-foreground hover:text-foreground"
                 >
                   <LogOut size={20} />

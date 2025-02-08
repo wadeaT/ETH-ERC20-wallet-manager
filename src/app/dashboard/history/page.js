@@ -7,9 +7,31 @@ import { TransactionFilters } from '@/components/features/transaction/Transactio
 import { TransactionTable } from '@/components/features/transaction/TransactionTable';
 import { formatTransactions } from '@/lib/services/transactionService';
 import { SecurityNotice } from '@/components/common/SecurityNotice';
-import { Inbox } from 'lucide-react'; // Import for empty state icon
+import { Inbox } from 'lucide-react';
+import { useWallet } from '@/hooks/useWallet';
+
+const ETHERSCAN_API_KEY = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
+const API_BASE_URL = 'https://api.etherscan.io/api';
+
+async function fetchWithRetry(url, retries = 3) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error(`Attempt ${i + 1} failed:`, error);
+      if (i === retries - 1) throw error;
+      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+    }
+  }
+}
 
 export default function HistoryPage() {
+  const { address, loading: walletLoading } = useWallet();
   const [state, setState] = useState({
     transactions: [],
     loading: true,
@@ -21,23 +43,55 @@ export default function HistoryPage() {
 
   useEffect(() => {
     const fetchTransactions = async () => {
+      if (!address) {
+        setState(prev => ({ ...prev, loading: false }));
+        return;
+      }
+
       try {
-        const walletAddress = localStorage.getItem('walletAddress');
-        if (!walletAddress) {
-          throw new Error('Wallet not connected');
+        setState(prev => ({ ...prev, loading: true, error: null }));
+
+        // Prepare API URLs
+        const normalTxUrl = `${API_BASE_URL}?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&sort=desc&apikey=${ETHERSCAN_API_KEY}`;
+        const tokenTxUrl = `${API_BASE_URL}?module=account&action=tokentx&address=${address}&startblock=0&endblock=99999999&sort=desc&apikey=${ETHERSCAN_API_KEY}`;
+
+        console.log('Fetching transactions for address:', address);
+
+        // Fetch transactions with retry logic
+        const [normalData, tokenData] = await Promise.all([
+          fetchWithRetry(normalTxUrl),
+          fetchWithRetry(tokenTxUrl)
+        ]);
+
+        console.log('API Response:', { 
+          normal: { status: normalData.status, message: normalData.message },
+          token: { status: tokenData.status, message: tokenData.message }
+        });
+
+        // Handle API errors or no transactions
+        if (normalData.status === '0' && normalData.message === 'No transactions found') {
+          normalData.result = [];
+        }
+        if (tokenData.status === '0' && tokenData.message === 'No transactions found') {
+          tokenData.result = [];
         }
 
-        const response = await fetch(`/api/transactions?address=${walletAddress}`);
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to fetch transactions');
+        // Check for other API errors
+        if (normalData.status === '0' && normalData.message !== 'No transactions found' ||
+            tokenData.status === '0' && tokenData.message !== 'No transactions found') {
+          throw new Error(normalData.message || tokenData.message || 'API Error');
         }
+
+        // Process transactions
+        const normalTxs = Array.isArray(normalData.result) ? normalData.result : [];
+        const tokenTxs = Array.isArray(tokenData.result) ? tokenData.result : [];
 
         const allTransactions = formatTransactions(
-          [...(data.normal || []), ...(data.token || [])],
-          walletAddress
+          [...normalTxs, ...tokenTxs],
+          address
         ).sort((a, b) => b.date - a.date);
+
+        console.log(`Found ${allTransactions.length} transactions`);
 
         setState(prev => ({
           ...prev,
@@ -49,26 +103,14 @@ export default function HistoryPage() {
         console.error('Error fetching transactions:', error);
         setState(prev => ({
           ...prev,
-          error: error.message || 'Failed to load transaction history',
+          error: 'Failed to load transaction history. Please try again later.',
           loading: false
         }));
       }
     };
 
     fetchTransactions();
-
-    // Add cleanup function
-    return () => {
-      setState({
-        transactions: [],
-        loading: true,
-        error: null,
-        searchQuery: '',
-        filterType: 'all',
-        showFilter: false
-      });
-    };
-  }, []);
+  }, [address]);
 
   const { transactions, loading, error, searchQuery, filterType, showFilter } = state;
 
@@ -86,7 +128,7 @@ export default function HistoryPage() {
     );
   });
 
-  if (loading) {
+  if (walletLoading || loading) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -94,7 +136,19 @@ export default function HistoryPage() {
     );
   }
 
-  const showEmptyState = !error && (!transactions.length || !filteredTransactions.length);
+  if (!address) {
+    return (
+      <Card className="p-8 bg-card/50 backdrop-blur-sm">
+        <div className="flex flex-col items-center justify-center text-center">
+          <Inbox className="w-12 h-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-medium mb-2">Wallet Not Connected</h3>
+          <p className="text-muted-foreground">
+            Please connect your wallet to view transaction history.
+          </p>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -125,7 +179,7 @@ export default function HistoryPage() {
 
       {error && <SecurityNotice type="error">{error}</SecurityNotice>}
 
-      {showEmptyState ? (
+      {!error && (!transactions.length || !filteredTransactions.length) ? (
         <Card className="p-8 bg-card/50 backdrop-blur-sm">
           <div className="flex flex-col items-center justify-center text-center">
             <Inbox className="w-12 h-12 text-muted-foreground mb-4" />

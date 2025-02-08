@@ -1,55 +1,22 @@
 // src/app/dashboard/receive/page.js
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Copy } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useRouter } from 'next/navigation';
-import { db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { useWallet } from '@/hooks/useWallet';
 
 export default function ReceivePage() {
   const router = useRouter();
+  const { address, loading, error } = useWallet();
   const [copied, setCopied] = useState(false);
-  const [ethAddress, setEthAddress] = useState('');
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchWalletAddress = async () => {
-      try {
-        const username = window.localStorage.getItem('username');
-        if (!username) {
-          router.push('/connect-wallet');
-          return;
-        }
-
-        const userDoc = await getDoc(doc(db, 'users', username));
-        if (!userDoc.exists()) {
-          return;
-        }
-
-        const userData = userDoc.data();
-        const address = userData.wallet?.address || userData.ethAddress || userData.address;
-        
-        if (address) {
-          setEthAddress(address);
-          window.localStorage.setItem('walletAddress', address);
-        }
-      } catch (error) {
-        console.error('Error fetching wallet:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchWalletAddress();
-  }, []);
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(ethAddress);
+      await navigator.clipboard.writeText(address);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -65,22 +32,43 @@ export default function ReceivePage() {
     );
   }
 
+  if (error) {
+    return (
+      <Card className="p-6 text-center text-destructive bg-destructive/10">
+        {error}
+      </Card>
+    );
+  }
+
+  if (!address) {
+    return (
+      <Card className="p-6 text-center">
+        <p className="text-muted-foreground">Wallet not connected</p>
+        <Button
+          variant="primary"
+          className="mt-4"
+          onClick={() => router.push('/connect-wallet')}
+        >
+          Connect Wallet
+        </Button>
+      </Card>
+    );
+  }
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold text-foreground mb-8">Receive Tokens</h1>
 
       <Card className="bg-card/50 backdrop-blur-sm p-8">
         <div className="flex flex-col items-center space-y-6">
-          {ethAddress && (
-            <div className="bg-background p-4 rounded-lg">
-              <QRCodeSVG 
-                value={ethAddress}
-                size={200}
-                level="H"
-                includeMargin={true}
-              />
-            </div>
-          )}
+          <div className="bg-background p-4 rounded-lg">
+            <QRCodeSVG 
+              value={address}
+              size={200}
+              level="H"
+              includeMargin={true}
+            />
+          </div>
 
           {/* Address Display */}
           <div className="w-full">
@@ -89,18 +77,16 @@ export default function ReceivePage() {
             </p>
             <div className="flex items-center gap-2 bg-muted/50 rounded-lg p-3">
               <code className="text-foreground flex-1 text-center break-all">
-                {ethAddress || 'No address found'}
+                {address}
               </code>
-              {ethAddress && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleCopy}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <Copy size={20} />
-                </Button>
-              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCopy}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <Copy size={20} />
+              </Button>
             </div>
             {copied && (
               <p className="text-success text-sm text-center mt-2">

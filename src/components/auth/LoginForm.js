@@ -1,15 +1,15 @@
-// src/components/wallet/ConnectWalletForm.js
-'use client';
-
+// src/components/auth/LoginForm.js
 import { useState } from 'react';
 import { Button } from '@/components/common/Button';
 import Link from 'next/link';
-import { db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
-import { ethers } from 'ethers';
 import { FormField } from '@/components/common/FormField';
 import { SecurityNotice } from '@/components/common/SecurityNotice';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { db, auth } from '@/lib/firebase';
+import { keyManager } from '@/lib/services/secureKeyManagement';
+import { handleLogout } from '@/lib/utils/auth';
 
 export function LoginForm() {
   const router = useRouter();
@@ -29,29 +29,64 @@ export function LoginForm() {
     setIsLoading(true);
 
     try {
+      // Clear existing sessions
+      await handleLogout();
+
+      // Get user data from Firestore
       const userDoc = await getDoc(doc(db, 'users', formData.username));
       
-      if (!userDoc.exists() || userDoc.data().password !== formData.password) {
-        setError('Invalid username or password');
-        setIsLoading(false);
-        return;
+      if (!userDoc.exists()) {
+        throw new Error('User not found');
       }
 
       const userData = userDoc.data();
-      const walletAddress = ethers.getAddress(userData.ethAddress || userData.wallet?.address);
       
-      localStorage.clear();
-      localStorage.setItem('username', formData.username);
-      localStorage.setItem('walletAddress', walletAddress);
-      
-      if (userData.encryptedKey || userData.wallet?.privateKey) {
-        localStorage.setItem('privateKey', userData.encryptedKey || userData.wallet.privateKey);
+      // Sign in with Firebase Auth
+      const email = `${formData.username}@ethwallet.local`;
+      await signInWithEmailAndPassword(auth, email, formData.password);
+
+      // Extract wallet data
+      if (!userData.wallet?.address || !userData.wallet?.encryptedKey) {
+        throw new Error('Wallet data not found');
       }
 
-      router.push('/dashboard');
+      try {
+        // Decrypt private key
+        const privateKey = await keyManager.decryptKey(
+          userData.wallet.encryptedKey,
+          formData.password
+        );
+
+        // Create session
+        const sessionId = keyManager.setSessionKey(
+          userData.wallet.address, 
+          privateKey
+        );
+
+        // Store session data
+        sessionStorage.setItem('username', formData.username);
+        sessionStorage.setItem('walletAddress', userData.wallet.address);
+        sessionStorage.setItem('encryptedKey', userData.wallet.encryptedKey);
+        sessionStorage.setItem('sessionId', sessionId);
+
+        // Update last login
+        await updateDoc(doc(db, 'users', formData.username), {
+          lastLogin: new Date().toISOString()
+        });
+
+        router.push('/dashboard');
+      } catch (error) {
+        console.error('Decryption error:', error);
+        throw new Error('Invalid password');
+      }
     } catch (err) {
       console.error('Login error:', err);
-      setError('An error occurred during login');
+      setError(
+        err.code === 'auth/invalid-login-credentials' 
+          ? 'Invalid username or password'
+          : err.message || 'Failed to connect wallet'
+      );
+    } finally {
       setIsLoading(false);
     }
   };

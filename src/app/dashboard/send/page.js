@@ -9,9 +9,9 @@ import { FormField } from '@/components/common/FormField';
 import { TokenSelector } from '@/components/features/token/TokenSelector';
 import { AmountInput } from '@/components/features/transaction/AmountInput';
 import { useWallet } from '@/hooks/useWallet';
-import { sendTransaction } from '@/lib/services/transactionService';
 import { SecurityNotice } from '@/components/common/SecurityNotice';
 import { ethers } from 'ethers';
+import { sendTransaction } from '@/lib/services/transactionService';
 
 export default function SendPage() {
   const router = useRouter();
@@ -20,6 +20,7 @@ export default function SendPage() {
   const [state, setState] = useState({
     toAddress: '',
     amount: '',
+    password: '', // Add password field
     selectedToken: tokens[0],
     showTokenSelect: false,
     isLoading: false,
@@ -47,7 +48,7 @@ export default function SendPage() {
 
   const handleSend = async (e) => {
     e.preventDefault();
-    const { toAddress, amount, selectedToken } = state;
+    const { toAddress, amount, selectedToken, password } = state;
 
     // Validate inputs
     const addressError = validateAddress(toAddress);
@@ -62,10 +63,15 @@ export default function SendPage() {
       return;
     }
 
+    if (!password) {
+      handleStateChange({ error: 'Password is required to confirm transaction' });
+      return;
+    }
+
     handleStateChange({ isLoading: true, error: '' });
 
     try {
-      await sendTransaction(toAddress, amount, selectedToken);
+      await sendTransaction(toAddress, amount, selectedToken, password);
       router.push('/dashboard');
     } catch (error) {
       console.error('Send error:', error);
@@ -84,7 +90,7 @@ export default function SendPage() {
     );
   }
 
-  const { toAddress, amount, selectedToken, showTokenSelect, isLoading, error } = state;
+  const { toAddress, amount, password, selectedToken, showTokenSelect, isLoading, error } = state;
 
   return (
     <div className="max-w-lg mx-auto space-y-6">
@@ -147,13 +153,27 @@ export default function SendPage() {
             token={selectedToken}
           />
 
+          {/* Password Confirmation */}
+          <FormField
+            label="Confirm Password"
+            type="password"
+            value={password}
+            onChange={(e) => {
+              handleStateChange({ 
+                password: e.target.value,
+                error: '' 
+              });
+            }}
+            placeholder="Enter your password to confirm"
+          />
+
           {/* Error Display */}
           {error && <SecurityNotice type="error">{error}</SecurityNotice>}
 
           {/* Submit Button */}
           <Button
             type="submit"
-            disabled={isLoading || !amount || !toAddress}
+            disabled={isLoading || !amount || !toAddress || !password}
             className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50"
           >
             {isLoading ? (
@@ -174,6 +194,7 @@ export default function SendPage() {
           <li>• Always verify the recipient's address before sending</li>
           <li>• Transactions cannot be reversed once confirmed</li>
           <li>• Make sure you have enough ETH for gas fees</li>
+          <li>• Enter your password to confirm the transaction</li>
         </ul>
       </SecurityNotice>
     </div>
